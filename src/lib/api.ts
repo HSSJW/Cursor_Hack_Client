@@ -100,6 +100,59 @@ export type RecommendRequest = {
  * 서버 응답 code가 REC210이면 needsClarification=true + clarificationQuestion + candidates 포함.
  * @throws Error — HTTP 오류 또는 API 오류 코드(REC204/REC210 제외)
  */
+/** 음성 인테이크에서 누적/추론하는 환자 상태 필드. (서버 PatientFields와 1:1) */
+export type PatientFields = {
+  symptom: string;
+  severity: string;
+  ageGroup: string;
+  sex: string;
+  requiredSpecialty: string;
+  consciousness: string;
+};
+
+export function emptyFields(): PatientFields {
+  return { symptom: '', severity: '', ageGroup: '', sex: '', requiredSpecialty: '', consciousness: '' };
+}
+
+export type IntakeResult = {
+  fields: PatientFields;
+  complete: boolean;
+  nextQuestion: string;
+  missingFields: string[];
+};
+
+export type IntakeRequest = {
+  sessionId?: string;
+  transcript: string;
+  fields: PatientFields;
+};
+
+/**
+ * POST /api/intake
+ * 한 턴의 발화 + 누적 필드를 보내 필드 추출/보정 + 완성 여부 + 다음 질문을 받는다.
+ * 성공 코드 IK200(완료)/IK210(추가 필요) 모두 result 반환.
+ * @throws Error — HTTP 오류 또는 기타 API 오류 코드
+ */
+export async function intakeStep(req: IntakeRequest): Promise<IntakeResult> {
+  const res = await fetch(`${SERVER_BASE_URL}/api/intake`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+
+  const json: ApiResponse<IntakeResult> = await res.json();
+
+  if (!json.isSuccess && json.code !== 'IK200' && json.code !== 'IK210') {
+    throw new Error(`API ${json.code}: ${json.message}`);
+  }
+
+  return json.result;
+}
+
 export async function recommendHospitals(req: RecommendRequest): Promise<RecommendResult> {
   const res = await fetch(`${SERVER_BASE_URL}/api/recommend`, {
     method: 'POST',

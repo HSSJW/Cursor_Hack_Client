@@ -39,10 +39,11 @@ function supportsOnDevice(): boolean {
 }
 
 /**
- * 인식 시작 — Push-to-Talk용.
+ * 인식 시작 — 핸즈프리 연속 인식용.
  * 네트워크(구글) 인식기 사용: 온디바이스 ko-KR 모델이 오디오를 받고도 'no-speech'를
  * 반환하는 기기(삼성 등)가 있어, 안정적인 네트워크 인식을 기본으로 한다.
- * continuous:true 로 누르고 있는 동안 계속 듣고, 무음 타임아웃을 길게 잡아 즉시 끊김을 방지.
+ * continuous:true 로 계속 듣고, 발화 종료(엔드포인팅)는 화면 쪽 JS 무음 타이머가 1차로 판정한다.
+ * native 무음 타임아웃은 그 직후에 동작하도록 백업으로만 살짝 길게 둔다.
  */
 export function startListening(): void {
   ExpoSpeechRecognitionModule.start({
@@ -51,10 +52,9 @@ export function startListening(): void {
     continuous: true,
     requiresOnDeviceRecognition: false,
     androidIntentOptions: {
-      // 발화 시작 전/중 무음에 즉시 종료되지 않도록 타임아웃 연장
-      EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS: 10000,
-      EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 3000,
-      EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS: 3000,
+      EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS: 1000,
+      EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 2000,
+      EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS: 2000,
     },
   });
 }

@@ -26,12 +26,19 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# build / run logs
+*.log
+
 # macOS
 .DS_Store
 *.pem
 
 # local env files
+.env
 .env*.local
+
+# local APK artifacts (large, per-env)
+apk/*.apk
 
 # typescript
 *.tsbuildinfo
